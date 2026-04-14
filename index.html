@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docker Troubleshooting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/theme/black.min.css">
+<style>
+  :root { --amber:#f5a623; --green:#4ecb8d; --purple:#a78bfa; --blue:#60a5fa; --red:#f87171; --bg:#0a0a0f; --bg2:#10101a; --bg3:#181824; --border:#2a2a3a; --text:#e8e8f0; --muted:#8888a8; }
+  .reveal-viewport { background: var(--bg); }
+  .reveal .slides section { background: transparent; }
+  .reveal { font-family: 'DM Sans', sans-serif; color: var(--text); }
+  .reveal h1,.reveal h2,.reveal h3 { font-family: 'Playfair Display', serif; font-weight: 700; }
+  .reveal h1 { font-size: 1.6em; color: var(--amber); line-height: 1.1; }
+  .reveal h2 { font-size: 1.1em; color: var(--amber); margin-bottom: .2em; }
+  .reveal h3 { font-size: .78em; color: var(--green); margin-bottom: .15em; }
+  .reveal p { font-size: .56em; line-height: 1.45; color: var(--text); }
+  .reveal li { font-size: .54em; line-height: 1.45; margin-bottom: .1em; }
+  .reveal code { font-family: 'JetBrains Mono', monospace; font-size: .72em; }
+  .reveal pre { box-shadow: none; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: .3em .5em; margin: .25em 0; }
+  .reveal pre code { font-size: .52em; line-height: 1.35; background: transparent; color: #cdd6f4; }
+  .slide-hdr { display: flex; align-items: center; gap: .4em; border-bottom: 1px solid var(--border); padding-bottom: .2em; margin-bottom: .3em; }
+  .slide-hdr .tag { font-family: 'JetBrains Mono', monospace; font-size: .42em; font-weight: 500; color: var(--bg); background: var(--amber); padding: .1em .4em; border-radius: 3px; letter-spacing: .04em; }
+  .slide-hdr h2 { margin: 0; font-size: .95em; }
+  .cols { display: grid; gap: .5em; } .cols-2 { grid-template-columns: 1fr 1fr; } .cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: .35em .6em; }
+  .card.amber { border-left: 3px solid var(--amber); } .card.green { border-left: 3px solid var(--green); }
+  .card.purple { border-left: 3px solid var(--purple); } .card.blue { border-left: 3px solid var(--blue); }
+  .card.red { border-left: 3px solid var(--red); }
+  .card h3 { font-size: .64em; margin: 0 0 .12em; } .card p { font-size: .52em; margin: 0; color: #b8b8d0; }
+  .card ul { margin: 0; padding-left: 1em; } .card li { font-size: .52em; color: #b8b8d0; margin-bottom: .02em; }
+  .reveal table { width: 100%; border-collapse: collapse; font-size: .5em; }
+  .reveal table th { background: var(--bg3); color: var(--amber); font-weight: 600; padding: .2em .4em; border: 1px solid var(--border); text-align: left; }
+  .reveal table td { padding: .18em .4em; border: 1px solid var(--border); color: #ccc; }
+  .reveal table tr:nth-child(even) td { background: #0e0e18; }
+  .a { color: var(--amber); font-weight: 600; } .g { color: var(--green); font-weight: 600; }
+  .p { color: var(--purple); font-weight: 600; } .b { color: var(--blue); font-weight: 600; }
+  .r { color: var(--red); font-weight: 600; } .mono { font-family: 'JetBrains Mono', monospace; }
+  .pill { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: .44em; padding: .08em .4em; border-radius: 99px; border: 1px solid; margin: 0 .08em; }
+  .pill.amber { color: var(--amber); border-color: var(--amber); } .pill.green { color: var(--green); border-color: var(--green); }
+  .pill.purple { color: var(--purple); border-color: var(--purple); } .pill.blue { color: var(--blue); border-color: var(--blue); }
+  .reveal .slide-footer { display: none; }
+  .title-slide h1 { font-size: 1.8em; }
+  .title-slide .subtitle { font-size: .7em; color: var(--green); font-family: 'DM Sans', sans-serif; font-weight: 300; letter-spacing: .04em; margin: .3em 0 .6em; }
+  .title-slide .meta { font-size: .48em; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .ss-row { display: flex; gap: .25em; align-items: center; margin: .1em 0; font-size: .55em; font-family: 'JetBrains Mono', monospace; }
+  .ss-node { padding: .2em .55em; border-radius: 5px; font-size: .9em; background: var(--bg3); border: 1px solid var(--border); color: var(--text); }
+  .ss-node.active { background: #1a2a1a; border-color: var(--green); color: var(--green); }
+  .ss-node.done { background: #1a1a2a; border-color: var(--purple); color: var(--purple); }
+  .ss-arrow { color: var(--amber); }
+  .reveal ul, .reveal ol { margin: .15em 0 .15em 1em; }
+  .reveal .slides > section { display: flex !important; flex-direction: column !important; overflow-y: auto !important; align-items: stretch !important; justify-content: flex-start !important; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+
+<!-- ═══════════════════════════════ SLIDE 01 — TITLE ═══════════════════════════════ -->
+<section class="title-slide" data-background-color="#0a0a0f">
+  <div style="text-align:left; max-width:820px; margin:0 auto; padding: 1em 0;">
+    <div style="font-family:'JetBrains Mono',monospace; font-size:.5em; color:var(--muted); margin-bottom:.4em; letter-spacing:.1em;">
+      TECHNICAL PRESENTATION
+    </div>
+    <h1>Docker<br>Troubleshooting</h1>
+    <div class="subtitle">Diagnose, Debug, and Resolve Container Issues</div>
+    <div style="width:60px; height:3px; background:var(--amber); margin-bottom:1.4em;"></div>
+    <div style="display:flex; gap:1.2em; flex-wrap:wrap; margin-bottom:1em;">
+      <span class="pill amber">Debugging</span>
+      <span class="pill green">Logs</span>
+      <span class="pill purple">Monitoring</span>
+      <span class="pill blue">DevOps</span>
+    </div>
+    <div class="ss-row" style="margin-top:0.6em;">
+      <span class="ss-node active">Observe</span>
+      <span class="ss-arrow">&rarr;</span>
+      <span class="ss-node active">Diagnose</span>
+      <span class="ss-arrow">&rarr;</span>
+      <span class="ss-node active">Isolate</span>
+      <span class="ss-arrow">&rarr;</span>
+      <span class="ss-node done">Fix</span>
+      <span class="ss-arrow">&rarr;</span>
+      <span class="ss-node done">Verify</span>
+    </div>
+    <p style="max-width:620px; color:#a0a0c0; font-size:.56em; line-height:1.5; margin-top:1em;">
+      A systematic approach to diagnosing and resolving the most common Docker issues &mdash; from container crashes to networking failures
+    </p>
+    <div class="meta" style="margin-top:1.4em;">
+      Debugging &nbsp;&middot;&nbsp; Logs &nbsp;&middot;&nbsp; Monitoring &nbsp;&middot;&nbsp; DevOps
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 02 — TOPICS ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">01</span>
+    <h2>Topics</h2>
+  </div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3 class="a">Methodology &amp; Fundamentals</h3>
+        <ul>
+          <li>Troubleshooting methodology</li>
+          <li>Container lifecycle &amp; exit codes</li>
+          <li>Docker logs &amp; log drivers</li>
+          <li>docker exec for live debugging</li>
+        </ul>
+      </div>
+      <div class="card green" style="margin-top:.4em;">
+        <h3 class="g">Inspection &amp; Monitoring</h3>
+        <ul>
+          <li>docker inspect deep dive</li>
+          <li>docker stats &amp; resource monitoring</li>
+          <li>Performance debugging (CPU, mem, I/O)</li>
+          <li>Docker daemon logs</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card purple">
+        <h3 class="p">Build &amp; Image Issues</h3>
+        <ul>
+          <li>Debugging build failures</li>
+          <li>Layer caching issues</li>
+          <li>Image pull errors &amp; registry issues</li>
+          <li>Disk space problems &amp; pruning</li>
+        </ul>
+      </div>
+      <div class="card blue" style="margin-top:.4em;">
+        <h3 class="b">Runtime &amp; Networking</h3>
+        <ul>
+          <li>Networking problems (DNS, ports)</li>
+          <li>Volume &amp; permission issues</li>
+          <li>Container restart loops</li>
+          <li>Debugging tools &amp; cheat sheet</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 03 — METHODOLOGY ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">02</span>
+    <h2>Troubleshooting Methodology</h2>
+  </div>
+  <p>A systematic approach prevents random guessing and saves hours of debugging time.</p>
+  <div class="ss-row" style="margin:.4em 0;">
+    <span class="ss-node active">Reproduce</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node active">Observe</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node active">Hypothesize</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node done">Test</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node done">Fix</span>
+  </div>
+  <div class="cols cols-2" style="margin-top:.3em;">
+    <div class="card amber">
+      <h3 class="a">Step 1: Gather Information</h3>
+      <ul>
+        <li>Check container status: <code>docker ps -a</code></li>
+        <li>Read the logs: <code>docker logs &lt;container&gt;</code></li>
+        <li>Inspect configuration: <code>docker inspect</code></li>
+        <li>Check resource usage: <code>docker stats</code></li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3 class="g">Step 2: Isolate the Problem</h3>
+      <ul>
+        <li>Is it a build issue or runtime issue?</li>
+        <li>Does it fail locally or only in CI/prod?</li>
+        <li>Is it the app, the image, or the host?</li>
+        <li>Did anything change recently?</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card purple" style="margin-top:.3em;">
+    <h3 class="p">The Golden Rule</h3>
+    <p>Always check <code>docker logs</code> first &mdash; 80% of container issues are visible in the application logs before you need any other tool.</p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 04 — CONTAINER LIFECYCLE & EXIT CODES ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">03</span>
+    <h2>Container Lifecycle &amp; Exit Codes</h2>
+  </div>
+  <div class="ss-row" style="margin:.3em 0;">
+    <span class="ss-node active">Created</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node active">Running</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node">Paused</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node done">Exited</span>
+    <span class="ss-arrow">&rarr;</span>
+    <span class="ss-node">Dead</span>
+  </div>
+  <table style="margin-top:.3em;">
+    <thead>
+      <tr><th>Exit Code</th><th>Meaning</th><th>Common Cause</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="g">0</span></td><td>Normal exit</td><td>Process completed successfully</td></tr>
+      <tr><td><span class="r">1</span></td><td>Application error</td><td>Unhandled exception, config error, missing file</td></tr>
+      <tr><td><span class="r">126</span></td><td>Permission denied</td><td>Entrypoint/CMD not executable</td></tr>
+      <tr><td><span class="r">127</span></td><td>Command not found</td><td>Binary missing from image, wrong PATH</td></tr>
+      <tr><td><span class="r">137</span></td><td>SIGKILL (128+9)</td><td>OOM killed or <code>docker kill</code></td></tr>
+      <tr><td><span class="r">139</span></td><td>SIGSEGV (128+11)</td><td>Segmentation fault in application</td></tr>
+      <tr><td><span class="r">143</span></td><td>SIGTERM (128+15)</td><td>Graceful stop via <code>docker stop</code></td></tr>
+    </tbody>
+  </table>
+  <pre><code class="language-bash"># Check exit code of a stopped container
+docker inspect --format='{{.State.ExitCode}}' my-container
+
+# See full state including OOMKilled flag
+docker inspect --format='{{json .State}}' my-container | jq .</code></pre>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 05 — DOCKER LOGS ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">04</span>
+    <h2>Docker Logs &amp; Log Drivers</h2>
+  </div>
+  <p>Container logs capture everything written to <span class="a">stdout</span> and <span class="a">stderr</span> by the main process (PID 1).</p>
+  <pre><code class="language-bash"># Basic log viewing
+docker logs my-container                  # all logs
+docker logs --tail 100 my-container       # last 100 lines
+docker logs --since 5m my-container       # last 5 minutes
+docker logs -f my-container               # follow (live tail)
+docker logs --timestamps my-container     # show timestamps
+
+# Combine flags for precision
+docker logs --since 2024-01-01T10:00:00 --until 2024-01-01T11:00:00 my-app</code></pre>
+  <div class="cols cols-2" style="margin-top:.3em;">
+    <div class="card amber">
+      <h3 class="a">Common Log Drivers</h3>
+      <ul>
+        <li><code>json-file</code> &mdash; default, stored on disk</li>
+        <li><code>local</code> &mdash; optimised, compressed</li>
+        <li><code>syslog</code> &mdash; sends to syslog daemon</li>
+        <li><code>journald</code> &mdash; systemd journal</li>
+        <li><code>fluentd</code> / <code>gelf</code> / <code>awslogs</code></li>
+      </ul>
+    </div>
+    <div class="card red">
+      <h3 class="r">Gotcha: Missing Logs</h3>
+      <ul>
+        <li>App writes to file instead of stdout</li>
+        <li>Non-default log driver hides <code>docker logs</code></li>
+        <li>Log rotation truncated old entries</li>
+        <li>Container was recreated (logs lost)</li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-bash"># Check which log driver a container uses
+docker inspect --format='{{.HostConfig.LogConfig.Type}}' my-container
+
+# Limit log file size in daemon.json or per-container
+docker run --log-opt max-size=10m --log-opt max-file=3 my-image</code></pre>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 06 — DOCKER EXEC ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">05</span>
+    <h2>docker exec for Live Debugging</h2>
+  </div>
+  <p>Shell into a <span class="g">running</span> container to inspect state, test connectivity, and debug in real time.</p>
+  <pre><code class="language-bash"># Interactive shell
+docker exec -it my-container /bin/bash
+docker exec -it my-container /bin/sh         # alpine / minimal images
+
+# Run a single command
+docker exec my-container cat /etc/hosts
+docker exec my-container env                 # check environment variables
+docker exec my-container ps aux              # see running processes
+
+# As a specific user
+docker exec -u root my-container apt-get update
+
+# Set environment variables for the exec session
+docker exec -e DEBUG=true my-container ./run-diagnostics.sh</code></pre>
+  <div class="cols cols-2" style="margin-top:.3em;">
+    <div class="card green">
+      <h3 class="g">Useful In-Container Checks</h3>
+      <ul>
+        <li><code>cat /etc/resolv.conf</code> &mdash; DNS config</li>
+        <li><code>ping</code> / <code>curl</code> / <code>wget</code> &mdash; connectivity</li>
+        <li><code>df -h</code> &mdash; disk space inside container</li>
+        <li><code>top</code> / <code>htop</code> &mdash; process resource usage</li>
+        <li><code>ls -la /app</code> &mdash; verify files &amp; permissions</li>
+      </ul>
+    </div>
+    <div class="card red">
+      <h3 class="r">When exec Won't Work</h3>
+      <ul>
+        <li>Container is stopped &mdash; use <code>docker run</code> instead</li>
+        <li>No shell in image (e.g., distroless/scratch)</li>
+        <li>Container restarts too fast to attach</li>
+        <li><strong>Workaround:</strong> <code>docker run -it --entrypoint /bin/sh image</code></li>
+        <li><strong>Debug images:</strong> <code>docker debug my-container</code> (Docker Desktop)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 07 — DOCKER INSPECT ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">06</span>
+    <h2>docker inspect Deep Dive</h2>
+  </div>
+  <p><code>docker inspect</code> returns the complete JSON configuration of any Docker object &mdash; the single most powerful diagnostic command.</p>
+  <pre><code class="language-bash"># Full JSON output (pipe to jq for readability)
+docker inspect my-container | jq .
+
+# Targeted queries with Go templates
+docker inspect -f '{{.State.Status}}' my-container
+docker inspect -f '{{.NetworkSettings.IPAddress}}' my-container
+docker inspect -f '{{range .Mounts}}{{.Source}} -> {{.Destination}}{{"\n"}}{{end}}' my-container
+docker inspect -f '{{json .Config.Env}}' my-container | jq .
+
+# Inspect images and networks too
+docker image inspect nginx:latest -f '{{.Config.ExposedPorts}}'
+docker network inspect bridge | jq '.[0].Containers'</code></pre>
+  <div class="cols cols-3" style="margin-top:.3em;">
+    <div class="card amber">
+      <h3 class="a">.State</h3>
+      <ul>
+        <li>Status, ExitCode</li>
+        <li>OOMKilled flag</li>
+        <li>StartedAt, FinishedAt</li>
+        <li>Pid (host PID)</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3 class="g">.NetworkSettings</h3>
+      <ul>
+        <li>IPAddress, Gateway</li>
+        <li>Port mappings</li>
+        <li>Network memberships</li>
+        <li>DNS settings</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3 class="p">.Config &amp; .Mounts</h3>
+      <ul>
+        <li>Env vars, Labels</li>
+        <li>Entrypoint &amp; Cmd</li>
+        <li>Volume bindings</li>
+        <li>Working directory</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 08 — DOCKER STATS ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">07</span>
+    <h2>docker stats &amp; Resource Monitoring</h2>
+  </div>
+  <p>Real-time resource usage for all running containers &mdash; your first stop for performance issues.</p>
+  <pre><code class="language-bash"># Live dashboard (updates every second)
+docker stats
+
+# One-shot snapshot (good for scripts)
+docker stats --no-stream
+
+# Specific containers with custom format
+docker stats --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}" web api db
+
+# Check memory limits vs actual usage
+docker inspect -f '{{.HostConfig.Memory}}' my-container   # 0 = unlimited</code></pre>
+  <table style="margin-top:.3em;">
+    <thead>
+      <tr><th>Column</th><th>What It Shows</th><th>Warning Signs</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="a">CPU %</span></td><td>CPU usage vs available cores</td><td>&gt;100% = using multiple cores heavily</td></tr>
+      <tr><td><span class="g">MEM USAGE/LIMIT</span></td><td>Current memory / hard limit</td><td>Approaching limit = OOM risk</td></tr>
+      <tr><td><span class="p">NET I/O</span></td><td>Network bytes in/out</td><td>Unexpectedly high = possible loop</td></tr>
+      <tr><td><span class="b">BLOCK I/O</span></td><td>Disk read/write bytes</td><td>High writes = logging or temp files</td></tr>
+      <tr><td><span class="r">PIDs</span></td><td>Number of processes</td><td>Growing count = possible fork bomb</td></tr>
+    </tbody>
+  </table>
+  <div class="card red" style="margin-top:.3em;">
+    <h3 class="r">Setting Resource Limits</h3>
+    <p><code>docker run --memory=512m --cpus=1.5 --pids-limit=100 my-image</code> &mdash; always set limits in production to prevent a single container from taking down the host.</p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 09 — BUILD FAILURES ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">08</span>
+    <h2>Debugging Build Failures</h2>
+  </div>
+  <p>Build failures happen at <span class="a">image creation time</span>. The key is identifying which layer failed and why.</p>
+  <div class="cols cols-2">
+    <div class="card red">
+      <h3 class="r">Common Build Errors</h3>
+      <ul>
+        <li><strong>COPY failed:</strong> file not in build context, check <code>.dockerignore</code></li>
+        <li><strong>RUN failed:</strong> command returned non-zero, missing dependency</li>
+        <li><strong>Package not found:</strong> need <code>apt-get update</code> before <code>install</code></li>
+        <li><strong>Permission denied:</strong> wrong file permissions on scripts</li>
+        <li><strong>Network errors:</strong> DNS resolution during build</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3 class="g">Debugging Techniques</h3>
+      <ul>
+        <li>Use <code>--progress=plain</code> for full output</li>
+        <li>Use <code>--no-cache</code> to rule out stale layers</li>
+        <li>Add <code>RUN ls -la</code> to verify file state</li>
+        <li>Build up to a specific stage with <code>--target</code></li>
+        <li>Use <code>DOCKER_BUILDKIT=0</code> to get intermediate IDs</li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-bash"># Verbose build output
+docker build --progress=plain --no-cache -t myapp .
+
+# Debug a failed multi-stage build at a specific stage
+docker build --target=builder -t myapp-debug .
+docker run -it myapp-debug /bin/sh
+
+# With BuildKit, use inline cache for CI
+docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t myapp .</code></pre>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 10 — LAYER CACHING ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">09</span>
+    <h2>Layer Caching Issues</h2>
+  </div>
+  <p>Docker caches each layer. When the cache breaks unexpectedly &mdash; or does not break when it should &mdash; you get confusing behaviour.</p>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3 class="a">Cache Not Working (Slow Builds)</h3>
+      <ul>
+        <li>Copying <code>.</code> before installing deps invalidates cache on every file change</li>
+        <li><code>ADD</code> with URLs always re-downloads</li>
+        <li>Build arg changes invalidate all downstream layers</li>
+        <li>Different build context (CI vs local)</li>
+      </ul>
+    </div>
+    <div class="card red">
+      <h3 class="r">Stale Cache (Wrong Output)</h3>
+      <ul>
+        <li><code>apt-get update</code> cached with old package list</li>
+        <li>Git clone caches a commit forever</li>
+        <li><code>pip install -r requirements.txt</code> cached but file changed</li>
+        <li>Fix: always <code>--no-cache</code> for CI releases</li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-dockerfile"># BAD: cache busts on any source change
+COPY . /app
+RUN npm install
+
+# GOOD: install deps first, then copy source
+COPY package.json package-lock.json /app/
+RUN npm install
+COPY . /app</code></pre>
+  <pre><code class="language-bash"># Bust cache from a specific point using build arg
+ARG CACHE_BUST=1
+RUN git clone https://github.com/org/repo.git</code></pre>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 11 — NETWORKING PROBLEMS ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">10</span>
+    <h2>Networking Problems</h2>
+  </div>
+  <p>Networking is the most common source of "works locally, fails in Docker" issues.</p>
+  <div class="cols cols-3">
+    <div class="card amber">
+      <h3 class="a">DNS Failures</h3>
+      <ul>
+        <li>Check <code>/etc/resolv.conf</code></li>
+        <li>Custom DNS: <code>--dns 8.8.8.8</code></li>
+        <li>Service discovery needs user-defined network</li>
+        <li>Default bridge has no auto DNS</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3 class="g">Connectivity</h3>
+      <ul>
+        <li>Container-to-container: use network name</li>
+        <li><code>localhost</code> inside container != host</li>
+        <li>Use <code>host.docker.internal</code> for host</li>
+        <li>Firewall rules blocking traffic</li>
+      </ul>
+    </div>
+    <div class="card red">
+      <h3 class="r">Port Conflicts</h3>
+      <ul>
+        <li><code>port is already allocated</code></li>
+        <li><code>lsof -i :8080</code> to find culprit</li>
+        <li>App listening on 127.0.0.1, not 0.0.0.0</li>
+        <li>EXPOSE != publish; need <code>-p</code></li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-bash"># Debug networking step by step
+docker network ls                                        # list networks
+docker network inspect my-network                        # show connected containers
+docker exec my-container cat /etc/resolv.conf            # check DNS config
+docker exec my-container ping other-container             # test connectivity
+docker exec my-container curl -v http://api:3000/health  # test service discovery
+
+# Create a user-defined network for DNS resolution
+docker network create my-app-net
+docker run --network my-app-net --name api my-api-image
+docker run --network my-app-net --name web my-web-image  # can reach "api" by name</code></pre>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 12 — VOLUMES & PERMISSIONS ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">11</span>
+    <h2>Volume &amp; Permission Issues</h2>
+  </div>
+  <p>Bind mounts and volumes cause some of the most frustrating debugging sessions, especially around <span class="r">file permissions</span>.</p>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3 class="a">Common Volume Problems</h3>
+      <ul>
+        <li>Empty directory after mount (overrides image files)</li>
+        <li>Changes not appearing (cached/wrong path)</li>
+        <li>Bind mount shows host user UID inside container</li>
+        <li>SELinux blocking access (need <code>:z</code> or <code>:Z</code>)</li>
+        <li>Windows line endings breaking scripts (<code>CRLF</code>)</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3 class="g">Permission Fixes</h3>
+      <ul>
+        <li>Match container UID to host UID</li>
+        <li><code>RUN chown -R appuser:appuser /app</code></li>
+        <li><code>docker run --user $(id -u):$(id -g)</code></li>
+        <li>Use named volumes instead of bind mounts</li>
+        <li>Set <code>umask</code> in entrypoint script</li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-bash"># Debug volume/permission issues
+docker exec my-container ls -la /app          # check ownership
+docker exec my-container id                    # who am I in the container?
+docker inspect -f '{{json .Mounts}}' my-container | jq .  # list mounts
+
+# Fix ownership at runtime
+docker exec -u root my-container chown -R 1000:1000 /data
+
+# SELinux context (Fedora/RHEL)
+docker run -v /host/data:/data:z my-image     # shared label
+docker run -v /host/data:/data:Z my-image     # private label</code></pre>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 13 — CONTAINER RESTART LOOPS ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">12</span>
+    <h2>Container Keeps Restarting</h2>
+  </div>
+  <p>A container in a restart loop is one of the most common and frustrating patterns. The key is breaking the cycle to inspect state.</p>
+  <div class="cols cols-2">
+    <div class="card red">
+      <h3 class="r">Why Containers Restart</h3>
+      <ul>
+        <li>App crashes immediately on startup</li>
+        <li>Missing environment variable or config file</li>
+        <li>Database not ready (race condition)</li>
+        <li>Port already in use inside container</li>
+        <li>OOM killed repeatedly (memory limit too low)</li>
+        <li>Health check failing, causing orchestrator restart</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3 class="g">How to Break the Loop</h3>
+      <ul>
+        <li>Check logs: <code>docker logs --tail 50 my-app</code></li>
+        <li>Stop the restart: <code>docker update --restart=no my-app</code></li>
+        <li>Override entrypoint: <code>docker run --entrypoint /bin/sh -it image</code></li>
+        <li>Check restart count: <code>docker inspect -f '{{.RestartCount}}'</code></li>
+        <li>Check OOM: <code>docker inspect -f '{{.State.OOMKilled}}'</code></li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-bash"># Full restart debugging workflow
+docker ps -a | grep my-app                           # see status & restart count
+docker logs --tail 50 my-app                         # read the crash output
+docker inspect -f '{{.State.ExitCode}}' my-app       # what exit code?
+docker inspect -f '{{.State.OOMKilled}}' my-app      # was it OOM?
+docker update --restart=no my-app                    # stop the loop
+docker run -it --entrypoint /bin/sh my-image         # debug interactively</code></pre>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 14 — IMAGE PULL ERRORS ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">13</span>
+    <h2>Image Pull Errors &amp; Registry Issues</h2>
+  </div>
+  <div class="cols cols-2">
+    <div class="card red">
+      <h3 class="r">Common Pull Errors</h3>
+      <table>
+        <thead><tr><th>Error</th><th>Cause</th></tr></thead>
+        <tbody>
+          <tr><td><code>manifest unknown</code></td><td>Tag does not exist in registry</td></tr>
+          <tr><td><code>pull access denied</code></td><td>Private repo, need <code>docker login</code></td></tr>
+          <tr><td><code>no matching manifest for linux/arm64</code></td><td>Image not built for your architecture</td></tr>
+          <tr><td><code>TLS handshake timeout</code></td><td>Network issue or proxy config</td></tr>
+          <tr><td><code>toomanyrequests</code></td><td>Docker Hub rate limit (100 pulls/6h)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card green">
+      <h3 class="g">Solutions</h3>
+      <ul>
+        <li>Verify tag exists: check registry UI or API</li>
+        <li>Login: <code>docker login registry.example.com</code></li>
+        <li>Check arch: <code>docker manifest inspect image:tag</code></li>
+        <li>Use mirror/proxy for rate limits</li>
+        <li>Pin digests for reproducibility: <code>image@sha256:abc...</code></li>
+        <li>Insecure registry: add to <code>daemon.json</code></li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-bash"># Debug pull issues
+docker pull --platform linux/amd64 nginx:latest      # force platform
+docker manifest inspect nginx:latest                  # check available architectures
+docker login ghcr.io                                  # authenticate to GitHub registry
+
+# Check rate limit status (Docker Hub)
+curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/nginx:pull" \
+  | jq -r .token | xargs -I {} curl -sI -H "Authorization: Bearer {}" \
+  https://registry-1.docker.io/v2/library/nginx/manifests/latest 2>&1 | grep ratelimit</code></pre>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 15 — DISK SPACE ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">14</span>
+    <h2>Disk Space Problems</h2>
+  </div>
+  <p>Docker can silently consume <span class="r">tens of gigabytes</span> with old images, stopped containers, and unused volumes.</p>
+  <pre><code class="language-bash"># See what Docker is using
+docker system df                     # summary: images, containers, volumes, build cache
+docker system df -v                  # detailed breakdown per object
+
+# The nuclear option: remove everything unused
+docker system prune -a --volumes     # WARNING: removes all stopped containers,
+                                     # unused images, unused networks, and volumes</code></pre>
+  <div class="cols cols-2" style="margin-top:.3em;">
+    <div class="card amber">
+      <h3 class="a">Targeted Cleanup</h3>
+      <ul>
+        <li><code>docker container prune</code> &mdash; remove stopped containers</li>
+        <li><code>docker image prune -a</code> &mdash; remove unused images</li>
+        <li><code>docker volume prune</code> &mdash; remove orphan volumes</li>
+        <li><code>docker builder prune</code> &mdash; clear build cache</li>
+        <li><code>docker image prune --filter "until=720h"</code> &mdash; older than 30 days</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3 class="p">Prevention</h3>
+      <ul>
+        <li>Use <code>--rm</code> flag for ephemeral containers</li>
+        <li>Set up cron job: <code>docker system prune -f</code></li>
+        <li>Use multi-stage builds (smaller images)</li>
+        <li>Add <code>.dockerignore</code> to exclude large files</li>
+        <li>Use Alpine or distroless base images</li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-bash"># Find the biggest images
+docker images --format "{{.Size}}\t{{.Repository}}:{{.Tag}}" | sort -hr | head -10
+
+# Find containers writing lots of data to their writable layer
+docker ps -s --format "table {{.Names}}\t{{.Size}}"</code></pre>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 16 — PERFORMANCE DEBUGGING ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">15</span>
+    <h2>Performance Debugging</h2>
+  </div>
+  <p>When containers are slow, systematically check <span class="a">CPU</span>, <span class="g">memory</span>, <span class="p">I/O</span>, and <span class="b">networking</span>.</p>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3 class="a">CPU Issues</h3>
+      <ul>
+        <li><code>docker stats</code> shows CPU %</li>
+        <li>Check CPU limits: <code>--cpus</code>, <code>--cpu-shares</code></li>
+        <li><code>docker exec my-app top -bn1</code> &mdash; find hot process</li>
+        <li>Host-level: <code>htop</code>, check steal time in VMs</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3 class="g">Memory Issues</h3>
+      <ul>
+        <li><code>docker stats</code> shows MEM USAGE / LIMIT</li>
+        <li>OOM kills: <code>dmesg | grep -i oom</code></li>
+        <li>Java apps: set <code>-XX:MaxRAMPercentage=75</code></li>
+        <li>Node.js: <code>--max-old-space-size=384</code></li>
+      </ul>
+    </div>
+  </div>
+  <div class="cols cols-2" style="margin-top:.3em;">
+    <div class="card purple">
+      <h3 class="p">I/O Bottlenecks</h3>
+      <ul>
+        <li>Overlay2 writes are slower than native</li>
+        <li>Use volumes for write-heavy workloads</li>
+        <li><code>docker exec my-app iostat</code> (if available)</li>
+        <li>tmpfs mounts for temp data: <code>--tmpfs /tmp</code></li>
+      </ul>
+    </div>
+    <div class="card blue">
+      <h3 class="b">Network Latency</h3>
+      <ul>
+        <li>Bridge NAT adds ~0.5ms overhead</li>
+        <li><code>--network host</code> removes NAT (Linux only)</li>
+        <li>Check MTU mismatches across networks</li>
+        <li>DNS resolution caching in container</li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-bash"># Host-level process inspection
+docker inspect -f '{{.State.Pid}}' my-container     # get PID on host
+sudo strace -p &lt;PID&gt; -c                             # syscall profiling
+sudo nsenter -t &lt;PID&gt; -n ss -tlnp                   # network sockets from container namespace</code></pre>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 17 — DAEMON LOGS ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">16</span>
+    <h2>Docker Daemon Logs</h2>
+  </div>
+  <p>When the problem is not the container but <span class="a">Docker itself</span> &mdash; daemon logs reveal engine-level errors.</p>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3 class="a">Finding Daemon Logs</h3>
+      <table>
+        <thead><tr><th>OS / Init</th><th>Command</th></tr></thead>
+        <tbody>
+          <tr><td>systemd (most Linux)</td><td><code>journalctl -u docker.service -f</code></td></tr>
+          <tr><td>macOS (Docker Desktop)</td><td><code>~/Library/Containers/.../log/vm/dockerd.log</code></td></tr>
+          <tr><td>Windows (Docker Desktop)</td><td>Event Viewer &rarr; Application</td></tr>
+          <tr><td>Amazon Linux / CentOS</td><td><code>/var/log/messages</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card green">
+      <h3 class="g">Enable Debug Mode</h3>
+      <ul>
+        <li>Add <code>"debug": true</code> to <code>/etc/docker/daemon.json</code></li>
+        <li>Reload: <code>sudo systemctl reload docker</code></li>
+        <li>Or send signal: <code>sudo kill -SIGHUP $(pidof dockerd)</code></li>
+        <li>Produces verbose output for all operations</li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-bash"># Check daemon status
+sudo systemctl status docker
+sudo journalctl -u docker.service --since "1 hour ago"
+
+# Enable debug logging
+sudo tee /etc/docker/daemon.json &lt;&lt;'EOF'
+{
+  "debug": true,
+  "log-level": "debug"
+}
+EOF
+sudo systemctl reload docker</code></pre>
+  <div class="card red" style="margin-top:.3em;">
+    <h3 class="r">Common Daemon Issues</h3>
+    <p>Storage driver errors, out of disk space, failed to start (port 2376 in use), DNS resolution failures, cgroup v1/v2 incompatibility, AppArmor/SELinux denials.</p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 18 — DEBUGGING TOOLS ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">17</span>
+    <h2>Useful Debugging Tools</h2>
+  </div>
+  <p>Third-party tools that make Docker troubleshooting significantly easier.</p>
+  <div class="cols cols-2">
+    <div class="card amber">
+      <h3 class="a">dive &mdash; Image Layer Explorer</h3>
+      <ul>
+        <li>Visualise each layer and its file changes</li>
+        <li>Find wasted space and bloated layers</li>
+        <li><code>dive my-image:latest</code></li>
+        <li>CI mode: <code>dive --ci my-image</code> (fails on waste)</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3 class="g">ctop &mdash; Container Top</h3>
+      <ul>
+        <li>Real-time metrics for all containers</li>
+        <li>Like <code>htop</code> but for Docker</li>
+        <li>CPU, memory, network, I/O at a glance</li>
+        <li><code>docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock quay.io/vektorlab/ctop</code></li>
+      </ul>
+    </div>
+  </div>
+  <div class="cols cols-2" style="margin-top:.3em;">
+    <div class="card purple">
+      <h3 class="p">lazydocker &mdash; Terminal UI</h3>
+      <ul>
+        <li>Full Docker management in the terminal</li>
+        <li>Logs, stats, inspect in one view</li>
+        <li>Compose-aware, shows service groups</li>
+        <li><code>brew install lazydocker</code> or <code>go install</code></li>
+      </ul>
+    </div>
+    <div class="card blue">
+      <h3 class="b">nsenter &mdash; Namespace Entry</h3>
+      <ul>
+        <li>Enter container namespaces from the host</li>
+        <li>Works even without shell in the container</li>
+        <li>Debug networking: <code>nsenter -t PID -n ip addr</code></li>
+        <li>Debug mounts: <code>nsenter -t PID -m cat /etc/hosts</code></li>
+      </ul>
+    </div>
+  </div>
+  <pre><code class="language-bash"># Install and run common tools
+brew install dive lazydocker ctop       # macOS
+apt install -y strace ltrace tcpdump    # Linux debugging essentials
+
+# Use docker debug (Docker Desktop 4.27+)
+docker debug my-container               # drops into a shell with tools pre-installed</code></pre>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 19 — CHEAT SHEET ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">18</span>
+    <h2>Troubleshooting Cheat Sheet</h2>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Symptom</th><th>First Command</th><th>Next Step</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Container won't start</td><td><code>docker logs &lt;name&gt;</code></td><td>Check exit code with <code>docker inspect</code></td></tr>
+      <tr><td>Container keeps restarting</td><td><code>docker logs --tail 50</code></td><td><code>docker update --restart=no</code></td></tr>
+      <tr><td>App not reachable</td><td><code>docker port &lt;name&gt;</code></td><td>Check app binds to <code>0.0.0.0</code>, not <code>127.0.0.1</code></td></tr>
+      <tr><td>Container slow</td><td><code>docker stats</code></td><td>Check limits, profile with <code>strace</code></td></tr>
+      <tr><td>Out of disk space</td><td><code>docker system df</code></td><td><code>docker system prune -a</code></td></tr>
+      <tr><td>Build failing</td><td><code>docker build --progress=plain</code></td><td><code>--no-cache</code>, check <code>.dockerignore</code></td></tr>
+      <tr><td>Can't pull image</td><td><code>docker manifest inspect</code></td><td><code>docker login</code>, check tag exists</td></tr>
+      <tr><td>Permission denied</td><td><code>docker exec ls -la /app</code></td><td>Match UID/GID, check SELinux</td></tr>
+      <tr><td>DNS not resolving</td><td><code>docker exec cat /etc/resolv.conf</code></td><td>Use user-defined network</td></tr>
+      <tr><td>OOM killed</td><td><code>docker inspect {{.State.OOMKilled}}</code></td><td>Increase <code>--memory</code> limit</td></tr>
+    </tbody>
+  </table>
+  <div class="card green" style="margin-top:.3em;">
+    <h3 class="g">Universal Debug One-Liner</h3>
+    <p><code>docker ps -a && docker logs --tail 30 &lt;container&gt; && docker inspect -f '{{json .State}}' &lt;container&gt; | jq .</code></p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ SLIDE 20 — SUMMARY ═══════════════════════════════ -->
+<section data-background-color="#0a0a0f">
+  <div class="slide-hdr">
+    <span class="tag">19</span>
+    <h2>Summary &amp; Further Reading</h2>
+  </div>
+  <div class="cols cols-2">
+    <div>
+      <div class="card amber">
+        <h3 class="a">Key Takeaways</h3>
+        <ul>
+          <li>Always start with <code>docker logs</code> and <code>docker inspect</code></li>
+          <li>Exit codes tell you <em>how</em> the container died</li>
+          <li>Use user-defined networks for DNS resolution</li>
+          <li>Set resource limits in production</li>
+          <li>Regularly prune unused Docker objects</li>
+          <li>Know your tools: dive, ctop, lazydocker, nsenter</li>
+        </ul>
+      </div>
+      <div class="card green" style="margin-top:.3em;">
+        <h3 class="g">Debugging Mindset</h3>
+        <ul>
+          <li>Reproduce before you fix</li>
+          <li>Change one thing at a time</li>
+          <li>Check the simple things first</li>
+          <li>Read the error message carefully</li>
+          <li>Document what you find for the team</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card purple">
+        <h3 class="p">Official Documentation</h3>
+        <ul>
+          <li><a href="https://docs.docker.com/engine/daemon/logs/" style="color:var(--blue);">Docker Daemon Logs</a></li>
+          <li><a href="https://docs.docker.com/reference/cli/docker/container/logs/" style="color:var(--blue);">docker logs Reference</a></li>
+          <li><a href="https://docs.docker.com/reference/cli/docker/inspect/" style="color:var(--blue);">docker inspect Reference</a></li>
+          <li><a href="https://docs.docker.com/engine/network/" style="color:var(--blue);">Docker Networking Guide</a></li>
+          <li><a href="https://docs.docker.com/storage/" style="color:var(--blue);">Docker Storage Guide</a></li>
+        </ul>
+      </div>
+      <div class="card blue" style="margin-top:.3em;">
+        <h3 class="b">Tools &amp; Resources</h3>
+        <ul>
+          <li><a href="https://github.com/wagoodman/dive" style="color:var(--blue);">dive</a> &mdash; image layer analysis</li>
+          <li><a href="https://github.com/bcicen/ctop" style="color:var(--blue);">ctop</a> &mdash; container metrics</li>
+          <li><a href="https://github.com/jesseduffield/lazydocker" style="color:var(--blue);">lazydocker</a> &mdash; terminal UI</li>
+          <li><a href="https://github.com/docker/docker-bench-security" style="color:var(--blue);">docker-bench-security</a> &mdash; security audit</li>
+          <li><a href="https://github.com/nicolaka/netshoot" style="color:var(--blue);">netshoot</a> &mdash; network troubleshooting</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/monokai.min.css">
+<script>
+Reveal.initialize({ hash:true, slideNumber:'c/t', transition:'fade', transitionSpeed:'fast', controls:true, progress:true, center:false, width:1100, height:900, margin:0.01, plugins:[RevealHighlight], highlight:{theme:'monokai'} });
+</script>
+<script>
+(function(){ var h=Reveal.getConfig().height||900; var m=Reveal.getConfig().margin||0.02; var maxH=Math.floor(h*(1-2*m))+'px'; function fixSlides(){ document.querySelectorAll('.reveal .slides>section,.reveal .slides>section>section').forEach(function(s){ s.style.display='block'; s.style.maxHeight=maxH; }); } Reveal.on('ready',fixSlides); Reveal.on('slidechanged',fixSlides); })();
+</script>
+</body></html>
