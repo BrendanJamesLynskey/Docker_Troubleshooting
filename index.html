@@ -8,9 +8,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/theme/black.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/theme/white.min.css">
 <style>
-  :root { --amber:#f5a623; --green:#4ecb8d; --purple:#a78bfa; --blue:#60a5fa; --red:#f87171; --bg:#0a0a0f; --bg2:#10101a; --bg3:#181824; --border:#2a2a3a; --text:#e8e8f0; --muted:#8888a8; }
+  :root { --amber:#af7e0f; --green:#217566; --purple:#4e4392; --blue:#204d89; --red:#bb2233; --bg:#eaeff2; --bg2:#e1e8ec; --bg3:#d9e1e6; --border:#b9c7d0; --text:#14273b; --muted:#5c6e7b; }
   .reveal-viewport { background: var(--bg); }
   .reveal .slides section { background: transparent; }
   .reveal { font-family: 'DM Sans', sans-serif; color: var(--text); }
@@ -22,7 +22,7 @@
   .reveal li { font-size: .54em; line-height: 1.45; margin-bottom: .1em; }
   .reveal code { font-family: 'JetBrains Mono', monospace; font-size: .72em; }
   .reveal pre { box-shadow: none; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: .3em .5em; margin: .25em 0; }
-  .reveal pre code { font-size: .52em; line-height: 1.35; background: transparent; color: #cdd6f4; }
+  .reveal pre code { font-size: .52em; line-height: 1.35; background: transparent; color: #213343; }
   .slide-hdr { display: flex; align-items: center; gap: .4em; border-bottom: 1px solid var(--border); padding-bottom: .2em; margin-bottom: .3em; }
   .slide-hdr .tag { font-family: 'JetBrains Mono', monospace; font-size: .42em; font-weight: 500; color: var(--bg); background: var(--amber); padding: .1em .4em; border-radius: 3px; letter-spacing: .04em; }
   .slide-hdr h2 { margin: 0; font-size: .95em; }
@@ -31,12 +31,12 @@
   .card.amber { border-left: 3px solid var(--amber); } .card.green { border-left: 3px solid var(--green); }
   .card.purple { border-left: 3px solid var(--purple); } .card.blue { border-left: 3px solid var(--blue); }
   .card.red { border-left: 3px solid var(--red); }
-  .card h3 { font-size: .64em; margin: 0 0 .12em; } .card p { font-size: .52em; margin: 0; color: #b8b8d0; }
-  .card ul { margin: 0; padding-left: 1em; } .card li { font-size: .52em; color: #b8b8d0; margin-bottom: .02em; }
+  .card h3 { font-size: .64em; margin: 0 0 .12em; } .card p { font-size: .52em; margin: 0; color: #354552; }
+  .card ul { margin: 0; padding-left: 1em; } .card li { font-size: .52em; color: #354552; margin-bottom: .02em; }
   .reveal table { width: 100%; border-collapse: collapse; font-size: .5em; }
   .reveal table th { background: var(--bg3); color: var(--amber); font-weight: 600; padding: .2em .4em; border: 1px solid var(--border); text-align: left; }
-  .reveal table td { padding: .18em .4em; border: 1px solid var(--border); color: #ccc; }
-  .reveal table tr:nth-child(even) td { background: #0e0e18; }
+  .reveal table td { padding: .18em .4em; border: 1px solid var(--border); color: #283948; }
+  .reveal table tr:nth-child(even) td { background: #e3eaee; }
   .a { color: var(--amber); font-weight: 600; } .g { color: var(--green); font-weight: 600; }
   .p { color: var(--purple); font-weight: 600; } .b { color: var(--blue); font-weight: 600; }
   .r { color: var(--red); font-weight: 600; } .mono { font-family: 'JetBrains Mono', monospace; }
@@ -49,12 +49,13 @@
   .title-slide .meta { font-size: .48em; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
   .ss-row { display: flex; gap: .25em; align-items: center; margin: .1em 0; font-size: .55em; font-family: 'JetBrains Mono', monospace; }
   .ss-node { padding: .2em .55em; border-radius: 5px; font-size: .9em; background: var(--bg3); border: 1px solid var(--border); color: var(--text); }
-  .ss-node.active { background: #1a2a1a; border-color: var(--green); color: var(--green); }
-  .ss-node.done { background: #1a1a2a; border-color: var(--purple); color: var(--purple); }
+  .ss-node.active { background: #c4d4d1; border-color: var(--green); color: var(--green); }
+  .ss-node.done { background: #d4dde4; border-color: var(--purple); color: var(--purple); }
   .ss-arrow { color: var(--amber); }
   .reveal ul, .reveal ol { margin: .15em 0 .15em 1em; }
   .reveal .slides > section { display: flex !important; flex-direction: column !important; overflow-y: auto !important; align-items: stretch !important; justify-content: flex-start !important; }
 </style>
+<style>.reveal .slide-number{background-color:transparent}</style>
 </head>
 <body>
 <div class="reveal">
@@ -62,7 +63,7 @@
 
 
 <!-- ═══════════════════════════════ SLIDE 01 — TITLE ═══════════════════════════════ -->
-<section class="title-slide" data-background-color="#0a0a0f">
+<section class="title-slide" data-background-color="#eaeff2">
   <div style="text-align:left; max-width:820px; margin:0 auto; padding: 1em 0;">
     <div style="font-family:'JetBrains Mono',monospace; font-size:.5em; color:var(--muted); margin-bottom:.4em; letter-spacing:.1em;">
       TECHNICAL PRESENTATION
@@ -87,7 +88,7 @@
       <span class="ss-arrow">&rarr;</span>
       <span class="ss-node done">Verify</span>
     </div>
-    <p style="max-width:620px; color:#a0a0c0; font-size:.56em; line-height:1.5; margin-top:1em;">
+    <p style="max-width:620px; color:#475865; font-size:.56em; line-height:1.5; margin-top:1em;">
       A systematic approach to diagnosing and resolving the most common Docker issues &mdash; from container crashes to networking failures
     </p>
     <div class="meta" style="margin-top:1.4em;">
@@ -98,7 +99,7 @@
 
 
 <!-- ═══════════════════════════════ SLIDE 02 — TOPICS ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">01</span>
     <h2>Topics</h2>
@@ -149,7 +150,7 @@
 
 
 <!-- ═══════════════════════════════ SLIDE 03 — METHODOLOGY ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">02</span>
     <h2>Troubleshooting Methodology</h2>
@@ -194,7 +195,7 @@
 
 
 <!-- ═══════════════════════════════ SLIDE 04 — CONTAINER LIFECYCLE & EXIT CODES ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">03</span>
     <h2>Container Lifecycle &amp; Exit Codes</h2>
@@ -233,7 +234,7 @@ docker inspect --format='{{json .State}}' my-container | jq .</code></pre>
 
 
 <!-- ═══════════════════════════════ SLIDE 05 — DOCKER LOGS ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">04</span>
     <h2>Docker Logs &amp; Log Drivers</h2>
@@ -278,7 +279,7 @@ docker run --log-opt max-size=10m --log-opt max-file=3 my-image</code></pre>
 
 
 <!-- ═══════════════════════════════ SLIDE 06 — DOCKER EXEC ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">05</span>
     <h2>docker exec for Live Debugging</h2>
@@ -324,7 +325,7 @@ docker exec -e DEBUG=true my-container ./run-diagnostics.sh</code></pre>
 
 
 <!-- ═══════════════════════════════ SLIDE 07 — DOCKER INSPECT ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">06</span>
     <h2>docker inspect Deep Dive</h2>
@@ -375,7 +376,7 @@ docker network inspect bridge | jq '.[0].Containers'</code></pre>
 
 
 <!-- ═══════════════════════════════ SLIDE 08 — DOCKER STATS ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">07</span>
     <h2>docker stats &amp; Resource Monitoring</h2>
@@ -412,7 +413,7 @@ docker inspect -f '{{.HostConfig.Memory}}' my-container   # 0 = unlimited</code>
 
 
 <!-- ═══════════════════════════════ SLIDE 09 — BUILD FAILURES ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">08</span>
     <h2>Debugging Build Failures</h2>
@@ -453,7 +454,7 @@ docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t myapp .</code></pre>
 
 
 <!-- ═══════════════════════════════ SLIDE 10 — LAYER CACHING ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">09</span>
     <h2>Layer Caching Issues</h2>
@@ -494,7 +495,7 @@ RUN git clone https://github.com/org/repo.git</code></pre>
 
 
 <!-- ═══════════════════════════════ SLIDE 11 — NETWORKING PROBLEMS ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">10</span>
     <h2>Networking Problems</h2>
@@ -544,7 +545,7 @@ docker run --network my-app-net --name web my-web-image  # can reach "api" by na
 
 
 <!-- ═══════════════════════════════ SLIDE 12 — VOLUMES & PERMISSIONS ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">11</span>
     <h2>Volume &amp; Permission Issues</h2>
@@ -587,7 +588,7 @@ docker run -v /host/data:/data:Z my-image     # private label</code></pre>
 
 
 <!-- ═══════════════════════════════ SLIDE 13 — CONTAINER RESTART LOOPS ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">12</span>
     <h2>Container Keeps Restarting</h2>
@@ -627,7 +628,7 @@ docker run -it --entrypoint /bin/sh my-image         # debug interactively</code
 
 
 <!-- ═══════════════════════════════ SLIDE 14 — IMAGE PULL ERRORS ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">13</span>
     <h2>Image Pull Errors &amp; Registry Issues</h2>
@@ -671,7 +672,7 @@ curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repositor
 
 
 <!-- ═══════════════════════════════ SLIDE 15 — DISK SPACE ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">14</span>
     <h2>Disk Space Problems</h2>
@@ -715,7 +716,7 @@ docker ps -s --format "table {{.Names}}\t{{.Size}}"</code></pre>
 
 
 <!-- ═══════════════════════════════ SLIDE 16 — PERFORMANCE DEBUGGING ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">15</span>
     <h2>Performance Debugging</h2>
@@ -769,7 +770,7 @@ sudo nsenter -t &lt;PID&gt; -n ss -tlnp                   # network sockets from
 
 
 <!-- ═══════════════════════════════ SLIDE 17 — DAEMON LOGS ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">16</span>
     <h2>Docker Daemon Logs</h2>
@@ -818,7 +819,7 @@ sudo systemctl reload docker</code></pre>
 
 
 <!-- ═══════════════════════════════ SLIDE 18 — DEBUGGING TOOLS ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">17</span>
     <h2>Useful Debugging Tools</h2>
@@ -874,7 +875,7 @@ docker debug my-container               # drops into a shell with tools pre-inst
 
 
 <!-- ═══════════════════════════════ SLIDE 19 — CHEAT SHEET ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">18</span>
     <h2>Troubleshooting Cheat Sheet</h2>
@@ -904,7 +905,7 @@ docker debug my-container               # drops into a shell with tools pre-inst
 
 
 <!-- ═══════════════════════════════ SLIDE 20 — SUMMARY ═══════════════════════════════ -->
-<section data-background-color="#0a0a0f">
+<section data-background-color="#eaeff2">
   <div class="slide-hdr">
     <span class="tag">19</span>
     <h2>Summary &amp; Further Reading</h2>
@@ -962,7 +963,7 @@ docker debug my-container               # drops into a shell with tools pre-inst
 </div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/highlight.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/monokai.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
 <script>
 Reveal.initialize({ hash:true, slideNumber:'c/t', transition:'fade', transitionSpeed:'fast', controls:true, progress:true, center:false, width:1100, height:900, margin:0.01, plugins:[RevealHighlight], highlight:{theme:'monokai'} });
 </script>
